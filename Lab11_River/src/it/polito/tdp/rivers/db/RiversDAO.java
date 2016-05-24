@@ -7,6 +7,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -25,9 +26,9 @@ public class RiversDAO {
 			ResultSet res = st.executeQuery();
 
 			while (res.next()) {
-			}
+			
 			rivers.add(new River(res.getInt("id"), res.getString("name")));
-
+			}
 			conn.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -64,6 +65,104 @@ public class RiversDAO {
 		return flows;
 
 	}
+	
+	public LocalDate getFirstDate(River river){
+		final String sql = "SELECT day from flow where river=? order by day asc";
+		
+		Connection conn = DBConnect.getConnection() ;
+		
+		PreparedStatement st;
+		try {
+			st = conn.prepareStatement(sql);
+			
+			st.setInt(1, river.getId());
+			
+			ResultSet rs = st.executeQuery() ;
+			
+			rs.first();
+			
+			return rs.getDate(1).toLocalDate();
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw(new RuntimeException(e)) ;
+		}
+	}
+	
+	public LocalDate getLastDate(River river){
+		final String sql = "SELECT day from flow where river=? order by day desc";
+		
+		Connection conn = DBConnect.getConnection() ;
+		
+		PreparedStatement st;
+		try {
+			st = conn.prepareStatement(sql);
+			
+			st.setInt(1, river.getId());
+			
+			ResultSet rs = st.executeQuery() ;
+			
+			rs.first();
+			
+			return rs.getDate(1).toLocalDate();
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw(new RuntimeException(e)) ;
+		}
+	}
+	
+	public int getNumberOfMisurations(River river){
+		final String sql = "SELECT count(*)  from flow where river=?";
+		
+		Connection conn = DBConnect.getConnection() ;
+		
+		PreparedStatement st;
+		try {
+			st = conn.prepareStatement(sql);
+			
+			st.setInt(1, river.getId());
+			
+			ResultSet rs = st.executeQuery() ;
+			
+			rs.first();
+			
+			return rs.getInt(1);
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw(new RuntimeException(e)) ;
+		}
+	}
+	
+	public float getMediumValue(River river){
+		final String sql = "SELECT flow  from flow where river=?";
+		float totale=0;
+		Connection conn = DBConnect.getConnection() ;
+		
+		PreparedStatement st;
+		try {
+			st = conn.prepareStatement(sql);
+			
+			st.setInt(1, river.getId());
+			
+			ResultSet rs = st.executeQuery() ;
+			
+			while(rs.next()){
+				totale+=rs.getFloat(1);
+			}
+			
+			return totale/this.getNumberOfMisurations(river);
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw(new RuntimeException(e)) ;
+		}
+	}
 
 	public static void main(String[] args) {
 		RiversDAO dao = new RiversDAO();
@@ -73,7 +172,7 @@ public class RiversDAO {
 
 		List<Flow> flows = dao.getAllFlows(rivers);
 		System.out.format("Loaded %d flows\n", flows.size());
-		// System.out.println(flows) ;
+		//System.out.println(flows) ;
 	}
 
 }
